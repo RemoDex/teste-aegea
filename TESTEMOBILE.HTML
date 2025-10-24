@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Field Service - Águas do Pará</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #4CAF50, #2196F3);
+            color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Alterado para min-height para melhor responsividade em telas pequenas */
+            overflow: auto; /* Permite rolagem se necessário */
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 90%; /* Ajustado para 90% da largura para melhor responsividade */
+            text-align: center;
+            animation: fadeIn 0.5s;
+            margin: 20px; /* Adicionado margem para espaçamento em dispositivos móveis */
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: #ddd;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #4CAF50;
+            border-radius: 5px;
+            transition: width 0.3s;
+        }
+        .stars {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        .star {
+            color: #FFD700;
+        }
+        .logo {
+            max-width: 150px; /* Tamanho da logo ajustado para responsividade */
+            height: auto;
+            margin-bottom: 20px;
+        }
+        .question img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin: 10px 0;
+            object-fit: contain; /* Garante que a imagem se ajuste sem distorção */
+        }
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .option {
+            background: #f0f0f0;
+            padding: 15px; /* Aumentado padding para melhor toque em mobile */
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+            font-size: 16px; /* Tamanho de fonte otimizado para mobile */
+        }
+        .option:hover {
+            background: #e0e0e0;
+        }
+        .option.selected {
+            background: #4CAF50;
+            color: white;
+        }
+        .option.correct {
+            background: #4CAF50;
+        }
+        .option.incorrect {
+            background: #f44336;
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        button {
+            background: #2196F3;
+            color: white;
+            border: none;
+            padding: 15px 30px; /* Aumentado padding para melhor usabilidade */
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: background 0.3s;
+            font-size: 16px; /* Tamanho de fonte otimizado */
+        }
+        button:hover {
+            background: #1976D2;
+        }
+        .feedback {
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        .hidden {
+            display: none;
+        }
+        /* Media query para dispositivos móveis */
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+                width: 95%;
+            }
+            .logo {
+                max-width: 120px; /* Logo menor em telas pequenas */
+            }
+            .question img {
+                margin: 5px 0; /* Menor margem para economizar espaço */
+            }
+            .option {
+                padding: 12px;
+            }
+            button {
+                padding: 12px 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="start-screen">
+            <img src="logo_aguas_para.png" alt="Logo Águas do Pará" class="logo"> <!-- Logo adicionada -->
+            <h1>Quiz de Integração - Field Service</h1>
+            <p>Teste seus conhecimentos sobre o sistema Field Service da Águas do Pará! Responda corretamente para ganhar estrelas e se tornar um mestre do campo.</p>
+            <button onclick="startQuiz()">Começar Quiz</button>
+        </div>
+        <div id="quiz-screen" class="hidden">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="stars" id="stars">⭐⭐⭐⭐⭐</div>
+            <div class="question" id="question">
+                <!-- Pergunta e imagem aqui -->
+            </div>
+            <div class="options" id="options">
+                <!-- Opções aqui -->
+            </div>
+            <button onclick="checkAnswer()">Responder</button>
+            <div class="feedback" id="feedback"></div>
+        </div>
+        <div id="end-screen" class="hidden">
+            <h2>Quiz Finalizado!</h2>
+            <p id="final-score"></p>
+            <p id="final-message"></p>
+            <button onclick="restartQuiz()">Reiniciar Quiz</button>
+        </div>
+    </div>
+
+    <script>
+        const questions = [
+            {
+                question: "Qual é o nome da instância para login no Field Service?",
+                image: "login_instance.png", // Placeholder: Print da tela de instância
+                options: ["AEGEA", "AGUAS", "PARA", "FIELD"],
+                correct: 0,
+                explanation: "Antes da tela de login, informe 'AEGEA' como ambiente."
+            },
+            {
+                question: "O que significa DDS?",
+                image: "dds_screen.png", // Placeholder: Print da tela DDS
+                options: ["Diálogo Diário de Segurança", "Diário de Serviços", "Dados de Segurança", "Deslocamento Diário"],
+                correct: 0,
+                explanation: "DDS é Diálogo Diário de Segurança, uma conversa sobre procedimentos e saúde no trabalho."
+            },
+            {
+                question: "Como abrir uma atividade de DDS?",
+                image: "add_activity_dds.png", // Placeholder: Print de adicionar atividade DDS
+                options: ["Clicar em 'Adicionar Atividade' > Tipo: DDS > Posição: Não ordenado", "Clicar em 'Iniciar' diretamente", "Selecionar no menu principal", "Usar o botão de refeição"],
+                correct: 0,
+                explanation: "Para DDS, clique em 'Adicionar Atividade', selecione Tipo DDS, Posição Não ordenado, Intervalo Manhã."
+            },
+            {
+                question: "O que é obrigatório no preenchimento do Checklist?",
+                image: "checklist_vehicle.png", // Placeholder: Print do checklist com fotos do veículo
+                options: ["Preencher todos os campos e enviar fotos do veículo (frente, direita, traseira, esquerda)", "Apenas enviar sem fotos", "Ignorar se não houver veículo", "Fazer apenas uma foto"],
+                correct: 0,
+                explanation: "O checklist é obrigatório, incluindo fotos do veículo: frente, direita, traseira, esquerda."
+            },
+            {
+                question: "Como apontar refeição no coletor?",
+                image: "refeicao_screen.png", // Placeholder: Print do apontamento de refeição
+                options: ["Clicar na atividade 'Refeição' ou adicionar nova se necessário, preencher fotos e enviar", "Ignorar e continuar trabalhando", "Apenas marcar no final do dia", "Usar o botão de DDS"],
+                correct: 0,
+                explanation: "Clique na atividade 'Refeição', ou adicione nova, preencha fotos e envie."
+            },
+            {
+                question: "Como ativar a rota no app?",
+                image: "activate_route.png", // Placeholder: Print da ativação de rota
+                options: ["Clicar em 'ATIVAR ROTA' > Enviar", "Clicar em 'Minha Rota' primeiro", "Ignorar e iniciar serviço", "Usar o botão de checklist"],
+                correct: 0,
+                explanation: "Para iniciar, ative a rota clicando em 'ATIVAR ROTA' e envie."
+            },
+            {
+                question: "Quais itens são obrigatórios na inicialização de serviço?",
+                image: "service_init.png", // Placeholder: Print de inicialização com fotos
+                options: ["Fachada do imóvel, local do HD, odômetro, fotos, geolocalização", "Apenas endereço", "Ignorar fotos", "Somente parecer"],
+                correct: 0,
+                explanation: "Preencha fachada, local do HD, odômetro, fotos e geolocalização."
+            },
+            {
+                question: "Quando paralisar uma OS?",
+                image: "paralisar_os.png", // Placeholder: Print de paralisação
+                options: ["Somente em caso de extrema necessidade, informar motivo", "Sempre que quiser", "Nunca", "Apenas no final do dia"],
+                correct: 0,
+                explanation: "Paralise apenas em extrema necessidade, informe motivo e entre em contato com programador."
+            },
+            {
+                question: "Diferença entre adicional executado e posterior?",
+                image: "adicionais_screen.png", // Placeholder: Print de serviços adicionais
+                options: ["Executado: realizado durante a OS; Posterior: realizado depois", "Ambos são iguais", "Posterior é sempre cortado", "Executado é opcional"],
+                correct: 0,
+                explanation: "Adicional Executado é durante a OS; Posterior é posteriormente."
+            },
+            {
+                question: "Quais fotos são obrigatórias para religação LISC?",
+                image: "religacao_lisc_photos.png", // Placeholder: Print de fotos obrigatórias
+                options: ["Fachada inicial, chassi HD, leitura, água jorrando, lacre novo, HD final, fachada final", "Apenas fachada", "Ignorar água jorrando", "Somente lacre"],
+                correct: 0,
+                explanation: "Obrigatórias: Fachada inicial, chassi, leitura, água jorrando, lacre novo, HD final, fachada final."
+            }
+        ];
+
+        let currentQuestion = 0;
+        let score = 0;
+        let stars = 5;
+
+        function startQuiz() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            showQuestion();
+        }
+
+        function showQuestion() {
+            const q = questions[currentQuestion];
+            document.getElementById('question').innerHTML = `
+                <h3>${q.question}</h3>
+                <img src="${q.image}" alt="Ilustração da pergunta">
+            `;
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+            q.options.forEach((option, index) => {
+                const div = document.createElement('div');
+                div.className = 'option';
+                div.textContent = option;
+                div.onclick = () => selectOption(index);
+                optionsDiv.appendChild(div);
+            });
+            document.getElementById('feedback').textContent = '';
+            updateProgress();
+            updateStars();
+        }
+
+        function selectOption(index) {
+            const options = document.querySelectorAll('.option');
+            options.forEach(opt => opt.classList.remove('selected'));
+            options[index].classList.add('selected');
+        }
+
+        function checkAnswer() {
+            const selected = document.querySelector('.option.selected');
+            if (!selected) return;
+            const q = questions[currentQuestion];
+            const selectedIndex = Array.from(document.querySelectorAll('.option')).indexOf(selected);
+            if (selectedIndex === q.correct) {
+                selected.classList.add('correct');
+                score++;
+            } else {
+                selected.classList.add('incorrect');
+                stars = Math.max(0, stars - 1);
+            }
+            document.getElementById('feedback').innerHTML = `<p>${selectedIndex === q.correct ? 'Correto!' : 'Incorreto!'}</p><p>${q.explanation}</p><button onclick="nextQuestion()">Próxima</button>`;
+            updateStars();
+        }
+
+        function nextQuestion() {
+            currentQuestion++;
+            if (currentQuestion < questions.length) {
+                showQuestion();
+            } else {
+                endQuiz();
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestion + 1) / questions.length) * 100;
+            document.getElementById('progress-fill').style.width = progress + '%';
+        }
+
+        function updateStars() {
+            const starElements = document.querySelectorAll('.star');
+            for (let i = 0; i < 5; i++) {
+                starElements[i].style.color = i < stars ? '#FFD700' : '#ddd';
+            }
+        }
+
+        function endQuiz() {
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('end-screen').classList.remove('hidden');
+            document.getElementById('final-score').textContent = `Pontuação: ${score}/${questions.length} (Estrelas: ${stars})`;
+            let message = '';
+            if (score === questions.length) message = 'Parabéns! Você é um especialista no Field Service!';
+            else if (score >= 7) message = 'Ótimo! Quase perfeito, revise os detalhes.';
+            else message = 'Bom esforço! Estude mais e tente novamente.';
+            document.getElementById('final-message').textContent = message;
+        }
+
+        function restartQuiz() {
+            currentQuestion = 0;
+            score = 0;
+            stars = 5;
+            document.getElementById('end-screen').classList.add('hidden');
+            startQuiz();
+        }
+    </script>
+</body>
+</html>
